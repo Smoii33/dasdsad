@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geo Quiz: ตะลุยโจทย์ภูมิศาสตร์</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
+    <style>
+        body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; }
+        .option-btn { transition: all 0.2s; border: 2px solid #e2e8f0; }
+        .option-btn:hover { border-color: #3b82f6; background-color: #eff6ff; }
+        .option-correct { border-color: #22c55e !important; background-color: #f0fdf4 !important; }
+        .option-wrong { border-color: #ef4444 !important; background-color: #fef2f2 !important; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <nav class="bg-blue-600 text-white p-4 shadow-md">
+        <div class="max-w-2xl mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <i data-lucide="brain-circuit"></i> Geo Master Quiz
+            </h1>
+            <div id="score-display" class="bg-blue-700 px-3 py-1 rounded-full text-sm">
+                ข้อที่: 1/10
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow flex items-center justify-center p-4">
+        <div id="quiz-container" class="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-6 md:p-8">
+            
+            <!-- Question Area -->
+            <div id="question-area">
+                <div id="image-container" class="w-full h-48 bg-slate-100 rounded-xl mb-6 flex items-center justify-center border-2 border-dashed border-slate-200">
+                    <!-- SVG Graphics will be injected here -->
+                </div>
+                
+                <h2 id="question-text" class="text-xl font-semibold mb-6 text-gray-800">
+                    กำลังโหลดคำถาม...
+                </h2>
+
+                <div id="options-grid" class="grid gap-3">
+                    <!-- Buttons will be injected here -->
+                </div>
+            </div>
+
+            <!-- Result Area (Hidden initially) -->
+            <div id="result-area" class="hidden text-center space-y-6">
+                <div id="final-icon" class="flex justify-center"></div>
+                <h2 class="text-3xl font-bold text-gray-800">จบการทดสอบ!</h2>
+                <p id="final-score" class="text-5xl font-extrabold text-blue-600">0 / 10</p>
+                <p id="feedback-text" class="text-gray-600 italic"></p>
+                <button onclick="restartQuiz()" class="bg-blue-600 text-white px-8 py-3 rounded-full font-bold hover:bg-blue-700 transition shadow-lg">
+                    ลองใหม่อีกครั้ง
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const questions = [
+            {
+                id: 1,
+                q: "จากรูปคือ 'Mushroom Rock' ท่านคิดว่ากระบวนการ 'Erosion' (การกัดเซาะ) เกิดขึ้นที่ส่วนใดของหินมากที่สุด?",
+                options: ["ส่วนยอดของหิน (The Cap)", "ส่วนโคนของหิน (The Base)", "ส่วนตรงกลางพอดี", "เกิดเท่ากันทุกส่วน"],
+                correct: 1,
+                rationale: "ลมพัดพาเม็ดทรายที่มีน้ำหนักได้ในระดับต่ำ (ใกล้พื้นดิน) ทำให้เกิดการขัดสีที่โคนหินจนกิ่วลง",
+                type: "mushroom"
+            },
+            {
+                id: 2,
+                q: "ในแม่น้ำที่โค้งตวัด (Meandering River) บริเวณใดเกิดการกัดเซาะ (Erosion) รุนแรงที่สุด?",
+                options: ["ฝั่งโค้งด้านใน (Inner Bank)", "ฝั่งโค้งด้านนอก (Outer Bank)", "กึ่งกลางลำน้ำ", "ปากแม่น้ำ (Delta)"],
+                correct: 1,
+                rationale: "น้ำไหลด้วยความเร็วสูงเข้าปะทะตลิ่งฝั่งโค้งด้านนอก ทำให้เกิดการพังทลายและกัดเซาะ",
+                type: "river"
+            },
+            {
+                id: 3,
+                q: "หากมาตราส่วนคือ 1:50,000 วัดระยะในแผนที่ได้ 4 ซม. ระยะทางจริงจะเป็นกี่กิโลเมตร?",
+                options: ["1 กม.", "2 กม.", "4 กม.", "5 กม."],
+                correct: 1,
+                rationale: "4 x 50,000 = 200,000 ซม. ตัดศูนย์ 5 ตัวเพื่อแปลงเป็น กม. จะได้ 2 กม.",
+                type: "calc"
+            },
+            {
+                id: 4,
+                q: "วิวัฒนาการใดถูกต้องของการเกิด 'Sea Stack' (เกาะหินโด่ง)?",
+                options: ["ซุ้มหิน -> ถ้ำ -> เสา", "ถ้ำ -> ซุ้มหิน -> เสา", "เสา -> ซุ้มหิน -> ถ้ำ", "สันทราย -> ลากูน -> เสา"],
+                correct: 1,
+                rationale: "เริ่มจากคลื่นกัดเป็นถ้ำ (Cave) ทะลุเป็นซุ้ม (Arch) แล้วเพดานพังเหลือแต่เสา (Stack)",
+                type: "sea"
+            },
+            {
+                id: 5,
+                q: "หุบเขาที่เกิดจากการกัดเซาะของ 'ธารน้ำแข็ง' (Glacier) จะมีลักษณะเป็นรูปตัวอะไร?",
+                options: ["รูปตัว V", "รูปตัว U", "รูปตัว S", "รูปตัว I"],
+                correct: 1,
+                rationale: "ธารน้ำแข็งมีมวลมาก ขูดผนังหุบเขาจนกว้างและโค้งมนเป็นรูปตัว U",
+                type: "glacier"
+            },
+            {
+                id: 6,
+                q: "เมือง A (15°E) เวลา 10:00 น. เมือง B (45°E) จะมีเวลาเท่าใด?",
+                options: ["08:00 น.", "10:00 น.", "12:00 น.", "14:00 น."],
+                correct: 2,
+                rationale: "ต่างกัน 30 องศา = 2 ชม. เมือง B อยู่ทางตะวันออกกว่า เวลาจึงเร็วกว่า (+2 ชม.)",
+                type: "time"
+            },
+            {
+                id: 7,
+                q: "เครื่องมือใดใช้ดูรูปถ่ายทางอากาศเพื่อให้เห็น 'มิติความสูงต่ำ' (3D)?",
+                options: ["Barometer", "Anemometer", "Stereoscope", "Microscope"],
+                correct: 2,
+                rationale: "Stereoscope ใช้ดูภาพคู่ซ้อนทับกันเพื่อให้เห็นความลึกและความชัน",
+                type: "tool"
+            },
+            {
+                id: 8,
+                q: "ในวันที่ 21 มิถุนายน (Summer Solstice) ซีกโลกเหนือจะเป็นอย่างไร?",
+                options: ["กลางคืนยาวที่สุด", "กลางวันยาวที่สุด", "กลางวันเท่ากับกลางคืน", "ไม่มีแสงอาทิตย์เลย"],
+                correct: 1,
+                rationale: "ขั้วโลกเหนือหันหาดวงอาทิตย์มากที่สุด ทำให้เป็นฤดูร้อนและกลางวันยาวที่สุด",
+                type: "astro"
+            },
+            {
+                id: 9,
+                q: "กระบวนการ 'Weathering' หมายถึงอะไร?",
+                options: ["การทับถมตะกอน", "การพัดพาเศษหิน", "การผุพังอยู่กับที่", "การเคลื่อนที่ของเปลือกโลก"],
+                correct: 2,
+                rationale: "Weathering คือการสลายตัวหรือแตกหักของหินอยู่กับที่โดยยังไม่มีการพัดพา",
+                type: "term"
+            },
+            {
+                id: 10,
+                q: "ภูมิประเทศแบบ 'Karst' (ถ้ำ/หลุมยุบ) เกิดจากน้ำฝนกัดเซาะหินชนิดใด?",
+                options: ["หินแกรนิต", "หินทราย", "หินปูน", "หินดินดาน"],
+                correct: 2,
+                rationale: "หินปูน (Limestone) ทำปฏิกิริยากับน้ำฝนที่มีฤทธิ์กรดอ่อนๆ จนเกิดการละลาย",
+                type: "karst"
+            }
+        ];
+
+        let currentIdx = 0;
+        let score = 0;
+        let answered = false;
+
+        const svgs = {
+            mushroom: `<svg viewBox="0 0 200 120" class="w-full h-full"><rect width="200" height="120" fill="#ffedd5"/><path d="M90 100 L110 100 L110 60 L90 60 Z" fill="#7c2d12"/><ellipse cx="100" cy="50" rx="40" ry="20" fill="#7c2d12"/><path d="M20 90 L50 90" stroke="#ea580c" stroke-width="2"/><path d="M150 90 L180 90" stroke="#ea580c" stroke-width="2"/><text x="100" y="115" text-anchor="middle" font-size="10" fill="#7c2d12">หินรูปเห็ด</text></svg>`,
+            river: `<svg viewBox="0 0 200 120" class="w-full h-full"><rect width="200" height="120" fill="#dcfce7"/><path d="M0 60 Q50 10 100 60 T200 60" fill="none" stroke="#3b82f6" stroke-width="20"/><circle cx="50" cy="25" r="5" fill="red"/><text x="50" y="15" text-anchor="middle" font-size="8" fill="red">จุดนี้คือ?</text></svg>`,
+            sea: `<svg viewBox="0 0 200 120" class="w-full h-full"><rect width="200" height="120" fill="#cffafe"/><rect y="80" width="200" height="40" fill="#0891b2"/><path d="M40 80 L60 80 L60 30 L40 30 Z" fill="#44403c"/><text x="50" y="25" text-anchor="middle" font-size="10" fill="#44403c">Sea Stack</text></svg>`,
+            glacier: `<svg viewBox="0 0 200 120" class="w-full h-full"><path d="M0 120 L50 40 L150 40 L200 120" fill="#475569"/><path d="M50 120 Q50 60 100 60 Q150 60 150 120 Z" fill="#f1f5f9"/><text x="100" y="90" text-anchor="middle" font-size="12" font-weight="bold" fill="#334155">Glacier Valley</text></svg>`,
+            calc: `<svg viewBox="0 0 200 120" class="w-full h-full"><rect width="200" height="120" fill="#fffbeb"/><text x="100" y="65" text-anchor="middle" font-size="14" font-weight="bold" fill="#b45309">Scale 1:50,000</text></svg>`,
+            astro: `<svg viewBox="0 0 200 120" class="w-full h-full"><circle cx="100" cy="60" r="30" fill="#3b82f6"/><line x1="100" y1="20" x2="100" y2="100" stroke="white" stroke-width="2" transform="rotate(23.5 100 60)"/><circle cx="170" cy="60" r="15" fill="#facc15"/></svg>`,
+            time: `<svg viewBox="0 0 200 120" class="w-full h-full"><circle cx="100" cy="60" r="40" fill="none" stroke="#64748b"/><text x="60" y="65" font-size="10">15°E</text><text x="140" y="65" font-size="10">45°E</text></svg>`,
+            tool: `<svg viewBox="0 0 200 120" class="w-full h-full"><rect x="60" y="40" width="30" height="40" fill="#94a3b8"/><rect x="110" y="40" width="30" height="40" fill="#94a3b8"/><path d="M60 40 L140 40" stroke="black"/></svg>`,
+            term: `<svg viewBox="0 0 200 120" class="w-full h-full"><path d="M80 60 L120 60 L100 40 Z" fill="#78350f"/><path d="M70 100 L90 100 L80 80 Z" fill="#78350f" opacity="0.5"/></svg>`,
+            karst: `<svg viewBox="0 0 200 120" class="w-full h-full"><path d="M0 120 L200 120 L200 40 Q150 20 100 40 T0 40 Z" fill="#d1d5db"/><circle cx="100" cy="80" r="15" fill="#1f2937"/></svg>`
+        };
+
+        function renderQuestion() {
+            const q = questions[currentIdx];
+            answered = false;
+            
+            document.getElementById('score-display').innerText = `ข้อที่: ${currentIdx + 1}/${questions.length}`;
+            document.getElementById('image-container').innerHTML = svgs[q.type] || '';
+            document.getElementById('question-text').innerText = q.q;
+            
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = '';
+            
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn w-full p-4 rounded-xl text-left font-medium hover:shadow-md active:scale-95";
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(i);
+                grid.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(selectedIdx) {
+            if (answered) return;
+            answered = true;
+            
+            const q = questions[currentIdx];
+            const btns = document.querySelectorAll('.option-btn');
+            
+            if (selectedIdx === q.correct) {
+                btns[selectedIdx].classList.add('option-correct');
+                score++;
+            } else {
+                btns[selectedIdx].classList.add('option-wrong');
+                btns[q.correct].classList.add('option-correct');
+            }
+            
+            // Show Rationale
+            const rationale = document.createElement('div');
+            rationale.className = "mt-4 p-4 bg-blue-50 text-blue-800 rounded-lg text-sm border border-blue-100 animate-bounce";
+            rationale.innerHTML = `<strong>เฉลย:</strong> ${q.rationale}`;
+            document.getElementById('question-area').appendChild(rationale);
+
+            // Next Button
+            const nextBtn = document.createElement('button');
+            nextBtn.className = "w-full mt-4 bg-gray-800 text-white p-3 rounded-xl font-bold hover:bg-black";
+            nextBtn.innerText = currentIdx < questions.length - 1 ? "ข้อต่อไป" : "ดูผลคะแนน";
+            nextBtn.onclick = () => {
+                currentIdx++;
+                if (currentIdx < questions.length) {
+                    document.querySelector('.animate-bounce')?.remove();
+                    nextBtn.remove();
+                    renderQuestion();
+                } else {
+                    showFinalResult();
+                }
+            };
+            document.getElementById('question-area').appendChild(nextBtn);
+        }
+
+        function showFinalResult() {
+            document.getElementById('question-area').classList.add('hidden');
+            document.getElementById('result-area').classList.remove('hidden');
+            document.getElementById('final-score').innerText = `${score} / ${questions.length}`;
+            
+            const feedback = score >= 8 ? "เทพภูมิศาสตร์ตัวจริง! พรุ่งนี้เต็มแน่" : 
+                             score >= 5 ? "ใช้ได้เลยเพื่อน ทบทวนอีกนิดผ่านฉลุย" : "กลับไปอ่านทวนอีกนิดนะ สู้ๆ!";
+            document.getElementById('feedback-text').innerText = feedback;
+            
+            const icon = document.getElementById('final-icon');
+            icon.innerHTML = score >= 8 ? `<i data-lucide="trophy" class="w-20 h-20 text-yellow-500"></i>` : 
+                                         `<i data-lucide="book-open" class="w-20 h-20 text-blue-500"></i>`;
+            lucide.createIcons();
+        }
+
+        function restartQuiz() {
+            currentIdx = 0;
+            score = 0;
+            document.getElementById('question-area').classList.remove('hidden');
+            document.getElementById('result-area').classList.add('hidden');
+            // Clean up any remaining rationales/buttons
+            const area = document.getElementById('question-area');
+            while (area.children.length > 3) area.lastChild.remove();
+            renderQuestion();
+        }
+
+        window.onload = () => {
+            lucide.createIcons();
+            renderQuestion();
+        };
+    </script>
+</body>
+</html>
